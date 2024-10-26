@@ -1,3 +1,4 @@
+import { NavLink } from "react-router-dom";
 import styled from "styled-components";
 
 const NavList = styled.ul`
@@ -44,3 +45,14 @@ const Link = styled.a`
     color: var(--color-brand-600);
   }
 `;
+
+function MainNav() {
+  return (
+    <NavList>
+      <li> <NavLink href="/dashboard" >Home</NavLink>  </li>
+      <li> <NavLink href="/bookings" >Bookings</NavLink>  </li>
+    </NavList>
+  );
+}
+
+export default MainNav;
