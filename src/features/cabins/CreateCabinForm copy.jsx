@@ -1,47 +1,35 @@
-/* eslint-disable react/prop-types */
+import styled from "styled-components";
 
-import { useForm } from "react-hook-form";
-
-import FormRow from "../../ui/FormRow";
 import Input from "../../ui/Input";
 import Form from "../../ui/Form";
 import Button from "../../ui/Button";
 import FileInput from "../../ui/FileInput";
 import Textarea from "../../ui/Textarea";
-import { useCreateCabin } from "./useCreateCabin";
-import { useEditCabin } from "./useEditCabine";
+import { useForm } from "react-hook-form";
+import { useMutation } from "@tanstack/react-query";
+import { createEditCabin } from "../../services/apiCabins";
+import { toast } from "react-hot-toast";
+import { useQueryClient } from "@tanstack/react-query";
+import FormRow from "../../ui/FormRow";
 
-function CreateCabinForm({ cabinToEdit = {} }) {
-  const { isCreating, createCabin } = useCreateCabin();
-  const { isEdeting, editCabine } = useEditCabin();
-  const isWorking = isCreating || isEdeting;
-
-  const { id: editId, ...editValue } = cabinToEdit;
-  const { register, handleSubmit, reset, getValues, formState } = useForm({
-    defaultValues: editId ? editValue : {},
-  });
+function CreateCabinForm() {
+  const { register, handleSubmit, reset, getValues, formState } = useForm();
   const { errors } = formState;
+  const queryClient = useQueryClient();
+  
+  const { mutate, isLoading: isCreating } = useMutation({
+    mutationFn: createEditCabin,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["cabins"] });
+      toast.success("New cabin successfully created");
+      reset();
+    },
+    onError: (err) => toast.error(err.message),
+  });
 
-  function onSubmit(data) {
-    const image = typeof data.image === "string" ? data.image : data.image[0];
-    if (editId)
-      editCabine(
-        { newCabinData: data, id: editId },
-        {
-          onSuccess: (data) => {
-            reset();
-          },
-        }
-      );
-    else
-      createCabin(
-        { ...data, image: image },
-        {
-          onSuccess: (data) => {
-            reset();
-          },
-        }
-      );
+  function onSubmit (data) {
+    console.log(data);
+    mutate({ ...data, image: data.image[0] });
   }
 
   const onError = (err) => {
@@ -107,7 +95,7 @@ function CreateCabinForm({ cabinToEdit = {} }) {
         <Textarea
           type="number"
           id="description"
-          disabled={isWorking}
+          disabled={isCreating}
           defaultValue=""
           {...register("description", {
             required: "This field is required",
@@ -116,14 +104,12 @@ function CreateCabinForm({ cabinToEdit = {} }) {
       </FormRow>
 
       <FormRow label="Cabin photo">
-        <FileInput
-          id="image"
-          accept="image/*"
-          disabled={isWorking}
-          {...register("image", {
-            required: editId ? false : "This field is required",
+        <FileInput id="image" accept="image/*" disabled={isCreating} 
+        {...register("image", {
+            required: "This field is required",
           })}
         />
+
       </FormRow>
 
       <FormRow>
@@ -132,7 +118,7 @@ function CreateCabinForm({ cabinToEdit = {} }) {
           Cancel
         </Button>
         <Button variation="primary" size="medium" disabled={isCreating}>
-          {editId ? "Save" : "Add cabin"}
+          Add cabin
         </Button>
       </FormRow>
     </Form>
