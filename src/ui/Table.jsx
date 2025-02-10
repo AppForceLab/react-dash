@@ -1,10 +1,10 @@
+/* eslint-disable react/prop-types */
 /* eslint-disable react-refresh/only-export-components */
 import { useQuery } from "@tanstack/react-query";
 import styled from "styled-components";
 import { getCabins } from "../services/apiCabins";
 import Spinner from "./Spinner";
-import Table from "./Table";
-import TableHeader from "./TableHeader";
+import { createContext, useContext } from "react";
 
 const StyledTable = styled.div`
   border: 1px solid var(--color-grey-200);
@@ -65,4 +65,38 @@ const Empty = styled.p`
   margin: 2.4rem;
 `;
 
+const TableContext = createContext();
 
+// eslint-disable-next-line react/prop-types
+function Table({ columns, children, ...props }) {
+  return (
+    <TableContext.Provider value={{ columns }}>
+      <StyledTable role="table" {...props}>
+        {children}
+      </StyledTable>
+    </TableContext.Provider>
+  );
+}
+
+Table.Header = function Header({ children, ...props }) {
+  const { columns } = useContext(TableContext);
+  return (
+    <StyledHeader role="row" as='header' columns={columns}>
+      {children}
+    </StyledHeader>
+  );
+};
+
+Table.Row = function Row({ children, ...props }) {
+  const { columns } = useContext(TableContext);
+  return <StyledRow role="row" columns={columns}>{children}</StyledRow>;
+};
+
+Table.Body = function Body({ data, columns, render }) {
+  if (!data.length) return <Empty>No data to show at the moment</Empty>;
+  return <StyledBody>{data.map(render)}</StyledBody>;
+};
+
+Table.Footer = Footer;
+
+export default Table;
